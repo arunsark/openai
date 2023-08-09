@@ -1,6 +1,6 @@
 
 const { Configuration, OpenAIApi } = require("openai");
-const { getLocation } = require("./repapi4gpt.js")
+const { getLocation, getRepScore, getRatings, getAggregatePageMetrics } = require("./repapi4gpt.js")
 
 
 const configuration = new Configuration({apiKey: process.env.OPENAI_API_KEY})
@@ -29,27 +29,27 @@ async function runLocationConversation(locationID, messages, functionName) {
 }
 
 async function initConversation(prompt) {
-    const messages = [{role: "user", content: prompt}]
+    const messages =  [{"role": "system", "content": "Assistant is an intelligent chatbot designed to help the store/location manager find details about his location"}]
+    messages.push({role: "user", content: prompt})
     let conversationResponse = {}
     conversationResponse.messages = messages
-    //messages.push(context)
     const functions = [
         {
             name: "getLocation",
-            description: "Find the details of the given location",
+            description: "Find details of the location. A location is also referred as store.",
             parameters: {
                 type: "object",
                 properties: {
                     location: {
                         type: "string",
-                        description: "The location code eg: 0053",
+                        description: "The location code or store code is alphanumeric code eg: 0053",
                     }
                 },
                 required: ["location"],
             }
         }
     ]
-    console.log('call gpt to getLocation')
+    // console.log('call gpt to getLocation')
     let response = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: messages,
@@ -58,18 +58,23 @@ async function initConversation(prompt) {
     });
 
     const responseMessages = response.data.choices[0].message
-    console.log('call function?', responseMessages)
+    // console.log('call function?', responseMessages)
     conversationResponse.content = responseMessages.content
 
     if ( responseMessages.function_call !== undefined ) {
-        console.log('here')
-        console.log(conversationResponse)
+        // console.log('here')
+        // console.log(conversationResponse)
         conversationResponse.locationID = JSON.parse(responseMessages.function_call?.arguments).location
         if ( conversationResponse.locationID !== null ) {
            conversationResponse.function_call = responseMessages.function_call
         }
-        console.log('here2')
-        console.log(conversationResponse)
+       conversationResponse. messages.push(
+        {
+            "role": responseMessages["role"],"name": responseMessages["function_call"]["name"],
+            "content": responseMessages["function_call"]["arguments"],
+        })
+        // console.log('here2')
+        // console.log(conversationResponse)
     }
 
     return conversationResponse
@@ -78,7 +83,6 @@ async function initConversation(prompt) {
 async function findLocationDetails(prompt) {
     let locationID = null
     try {
-        prompt = "I manage the location 0055"
         let response = await initConversation(prompt)
         let content = response.content        
         if ( response.function_call !== undefined && response.function_call.name === "getLocation" ) {
@@ -89,17 +93,33 @@ async function findLocationDetails(prompt) {
                content = response.data.choices[0].message.content
             }
         }
+        console.log('location', locationID)
         return {locationID: locationID, message: content}
     } catch(err) {
         console.log(err)
     }
 }
 
-function getMetric(action, locationID) {
-    return {rep_score: 455}
+function getMetric(metric, range, locationID) {
+    // if ( range !== undefined ) {
+    //     console.log('range', range)
+    // }
+
+    if ( metric.match(/rep.* score/ig) || metric.match(/score/ig) )
+        return getRepScore(locationID, range)
+    else if ( metric.match(/rating.*/ig) ) 
+        return getRatings(locationID, range)
+    else if ( metric.match(/page.* view.*/ig) )
+        return getAggregatePageMetrics(locationID, range)
+    else
+        return {error: "Metric not found"}
 }
 
 async function doConversation(prompt, locationID, messages) {
+    if ( locationID == null ) {
+        // console.log('locationID is null')
+        return await findLocationDetails(prompt);
+    }
     messages.push(...context)
     messages.push({role: "user", content: prompt})    
     let conversationResponse = {}
@@ -114,13 +134,17 @@ async function doConversation(prompt, locationID, messages) {
                     metric: {
                         type: "string",
                         description: "The metric eg. score, reputation score, rep score, google reviews, publishing, listing accuracy etc.",
+                    },
+                    range: {
+                        type: "string",
+                        description: "The range of the metric eg. last 30 days, last 7 days, last 90 days, previous month, previous quarter, previous year, current quarter, current month, current year etc."
                     }
                 },
                 required: ["metric"],
             }
         }
     ]
-    console.log('call gpt to getLocation')
+    // console.log('call gpt to getLocation')
     let response = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: messages,
@@ -128,36 +152,39 @@ async function doConversation(prompt, locationID, messages) {
         function_call: "auto"
     });
     const responseMessages = response.data.choices[0].message
-    console.log('call function?', responseMessages)
+    // console.log('call function?', responseMessages)
     conversationResponse.content = responseMessages.content
     let content = conversationResponse.content        
 
     if ( responseMessages.function_call !== undefined ) {
-        console.log('here')
-        console.log(conversationResponse)
+        //console.log('here')
+        //console.log(conversationResponse)
         conversationResponse.metric = JSON.parse(responseMessages.function_call?.arguments).metric
+        conversationResponse.range = JSON.parse(responseMessages.function_call?.arguments).range
         if ( conversationResponse.metric !== null ) {
            conversationResponse.function_call = responseMessages.function_call
         }
-        console.log('here2')
-        console.log(conversationResponse)
+        // console.log('here2')
+        // console.log(conversationResponse)
     }
-    let functionName = conversationResponse.function_call.name
+    let functionName = conversationResponse.function_call?.name
     let functionToCall = availableFunctions[functionName]
     if ( functionToCall !== undefined && functionName === "getMetric" ) {
-        console.log('here3')
-        let functionResponse = await functionToCall(conversationResponse.metric, locationID)
+        //console.log('here3', conversationResponse)
+        let functionResponse = await functionToCall(conversationResponse.metric, conversationResponse.range, locationID)
         messages.push({"role": responseMessages["role"],"name": responseMessages["function_call"]["name"],
                 "content": responseMessages["function_call"]["arguments"],
             })
+        console.log(JSON.stringify(functionResponse))
         messages.push({role: "function", name:functionName, content: JSON.stringify(functionResponse)})
-        console.log(messages)
+        // console.log(messages)
         const response2 = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
             messages: messages
         })
+        //console.log(response2)
         content = response2.data.choices[0].message.content
-        console.log(content)
+        // console.log(content)
     }
     return {message: content}
 }

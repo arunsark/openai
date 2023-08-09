@@ -48,7 +48,7 @@ async function getSummary(payload) {
 //    console.log("getSummary", payload)
     const config = {
         headers: {'x-api-key': 'd348333fa3c5cfce8b88a3cb802e62ac'},
-        params: {from:"2023-07-01", to:"2023-07-31", locationIDs: payload.location}
+        params: {locationIDs: payload.location, range: payload.range}
     }
     try {
         const { status, data } = await axios.get('https://api.reputation.com/v3/summary', config);
@@ -61,10 +61,27 @@ async function getSummary(payload) {
     return null
 }
 
+async function getAggregatePageMetricsApi(payload) {
+    // console.log("getAggregatePageMetrics", payload)
+     const config = {
+         headers: {'x-api-key': 'd348333fa3c5cfce8b88a3cb802e62ac'},
+         params: payload
+     }
+     try {
+         const { status, data } = await axios.get('https://api.reputation.com/v3/aggregate-page-metrics', config);
+         if ( status == 200 ) {
+             return data
+         }
+     } catch(error) {
+         console.log("Failed", error)
+     }
+     return null
+ }
+
 const getLocations = async (data) => {
     let payload = buildPostPayload(data)
     payload.url = 'https://api.reputation.com/v3/locations-search'
-    console.log(payload)
+    // console.log(payload)
     const resp = await post(payload)
     return resp    
 }
@@ -88,11 +105,22 @@ const filterMainLocation = (locations, zipCode) => {
     return filteredLocations.length > 0 ? filteredLocations[0] : null
 }
 
-const getRepScore = async (payload) => {
-    const data = await getSummary(payload)
+const getRepScore = async (locationID, range) => {
+    const data = await getSummary({location: locationID, range: range})
     return {score: data.summary?.overall?.score}
+}
+
+const getRatings = async (locationID, range) => {
+    const data = await getSummary({location: locationID, range: range})
+    return {rating: data.summary?.overall?.rating}
+}
+
+const getAggregatePageMetrics = async (locationID, range, sourceID) => {
+    const data = await getAggregatePageMetricsApi({locationIDs: locationID, range: range, sourceIDs: sourceID})
+    return data
 }
 
 exports.getLocationApi = getLocation
 exports.getRepScoreApi = getRepScore
-//module.exports = { getRepScore, getLocations, filterMainLocation, getLocation }
+exports.getRatingsApi = getRatings
+exports.getAggregatePageMetricsApi = getAggregatePageMetrics
