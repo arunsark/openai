@@ -62,7 +62,7 @@ const runPrompt = async () => {
 console.log(chalk.bgBlue.white.bold('=========================================================='))
 console.log(chalk.bgHex('#DEADED').underline.bold('Welcome to RepGT!'))
 console.log(chalk.bgBlue.white.bold('=========================================================='))
-//runPrompt()
+runPrompt()
 const runDebugPrompt = async () => {
     let gptResponse = await doConversation('Provide my ratings in current quarter?', '0053', []);
     console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
@@ -83,7 +83,7 @@ const runDebugPrompt = async () => {
     console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
 }
-runDebugPrompt()
+//runDebugPrompt()
 //console.log(convertRange('last 3 days'));
 
 

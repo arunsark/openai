@@ -1,7 +1,7 @@
 
 const axios = require('axios')
 
-const headers = { 'x-api-key': 'd348333fa3c5cfce8b88a3cb802e62ac', 'Content-Type': 'application/json' }
+const headers = { 'x-api-key': process.env.X_API_KEY, 'Content-Type': 'application/json' }
 
 
 const buildPostPayload = (data) => {
@@ -21,7 +21,7 @@ const buildGetPayload = () => {
 
 const post = async (payload) => {
     try {
-        const { status, data} = await axios.post(payload.url, payload.data, {headers: {'x-api-key': 'd348333fa3c5cfce8b88a3cb802e62ac','Content-Type': 'application/json'} });
+        const { status, data} = await axios.post(payload.url, payload.data, {headers: {'x-api-key': process.env.X_API_KEY,'Content-Type': 'application/json'} });
         
         if ( status == 200 ) {
             return data
