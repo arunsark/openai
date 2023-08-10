@@ -42,6 +42,7 @@ const gpt = async () => {
 
 const runPrompt = async () => {
     let userResponse = true 
+    let gptResponse = {}
     while ( userResponse ) {
         userResponse = await gpt();
         // console.log(userResponse)
@@ -49,10 +50,8 @@ const runPrompt = async () => {
             break;
     
         try {
-            const gptRepsonse = await doConversation(userResponse.userInput, locationID, []);
-            if ( locationID === null )
-                locationID = gptRepsonse.locationID
-            console.log(chalk.bgBlue.yellowBright.underline.bold(gptRepsonse.message));
+            gptResponse = await doConversation(userResponse.userInput, gptResponse.location, []);
+            console.log(chalk.bgBlue.yellowBright.underline.bold(gptResponse.message));
         } catch(err) {
             console.log(err)
         }
@@ -64,23 +63,41 @@ console.log(chalk.bgHex('#DEADED').underline.bold('Welcome to RepGT!'))
 console.log(chalk.bgBlue.white.bold('=========================================================='))
 runPrompt()
 const runDebugPrompt = async () => {
-    let gptResponse = await doConversation('Provide my ratings in current quarter?', '0053', []);
+    // let gptResponse = await doConversation('Provide my ratings in current quarter?', '0053', []);
+    // console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+
+    // gptResponse = await doConversation('Provide my ratings for today?', '0053', []);
+    // console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+
+    // gptResponse = await doConversation('Provide my ratings for yesterday?', '0053', []);
+    // console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+
+    let gptResponse = await doConversation('what is the capital of France?', undefined, []);
     console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
-    gptResponse = await doConversation('Provide my ratings for today?', '0053', []);
+    // let gptResponse = await doConversation('what is my ratings for previous quarter?', undefined, []);
+    // console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+
+
+    gptResponse = await doConversation('my location for managing in 0086', '0053', []);
     console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
-    gptResponse = await doConversation('Provide my ratings for yesterday?', '0053', []);
+    gptResponse = await doConversation('what is my ratings for previous quarter?', gptResponse.location, []);
+    console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+ 
+
+    gptResponse = await doConversation('my location for managing in 0053', gptResponse.location, []);
     console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
-    gptResponse = await doConversation('what are my current month ratings?', '0053', []);
+
+    gptResponse = await doConversation('what is my ratings for previous quarter?', gptResponse.location, []);
     console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
-    gptResponse = await doConversation('Current year what are my ratings?', '0053', []);
-    console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+    // gptResponse = await doConversation('Current year what are my ratings?', '0053', []);
+    // console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
-    gptResponse = await doConversation('what about previous  year what are my ratings?', '0053', []);
-    console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
+    // gptResponse = await doConversation('what about previous  year what are my ratings?', '0053', []);
+    // console.log(chalk.bgBlue.yellowBright.underline.bold(JSON.stringify(gptResponse)));
 
 }
 //runDebugPrompt()

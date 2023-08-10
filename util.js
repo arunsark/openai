@@ -47,7 +47,7 @@ const get = async (payload) => {
 async function getSummary(payload) {
 //    console.log("getSummary", payload)
     const config = {
-        headers: {'x-api-key': 'd348333fa3c5cfce8b88a3cb802e62ac'},
+        headers: {'x-api-key': process.env.X_API_KEY},
         params: {locationIDs: payload.location, range: payload.range}
     }
     try {
@@ -64,7 +64,7 @@ async function getSummary(payload) {
 async function getAggregatePageMetricsApi(payload) {
     // console.log("getAggregatePageMetrics", payload)
      const config = {
-         headers: {'x-api-key': 'd348333fa3c5cfce8b88a3cb802e62ac'},
+         headers: {'x-api-key': process.env.X_API_KEY},
          params: payload
      }
      try {

@@ -3,7 +3,7 @@ const { convertRange } = require("./converters.js")
 
 const DEFAULT_RANGE = 'Last30Days';
 
-const getLocation = async (locationID) => {
+const getLocation = async (locationID) => {    
     let resp = await getLocationApi(locationID)
     if ( resp === null ) {
         return {error: "Location not found"}
@@ -25,6 +25,8 @@ const normalizeRange = (range) => {
 }
 
 const getRepScore = async (locationID, range) => {
+    if ( locationID === undefined ) 
+        return { error: "Location not known" }
     let resp = await getRepScoreApi(locationID, normalizeRange(range))
     if ( resp === null ) {
         return {error: "Score not found"}
@@ -34,6 +36,8 @@ const getRepScore = async (locationID, range) => {
 }
 
 const getRatings = async (locationID, range) => {
+    if ( locationID === undefined ) 
+        return { error: "Location not known" }
     let resp = await getRatingsApi(locationID, normalizeRange(range))
     if ( resp === null ) {
         return {error: "Ratings not found"}
@@ -43,6 +47,8 @@ const getRatings = async (locationID, range) => {
 }
 
 const getAggregatePageMetrics = async (locationID, range, sourceID) => {
+    if ( locationID === undefined ) 
+        return { error: "Location not known" }
     if ( sourceID === undefined ) 
         sourceID = "GOOGLE_PLACES"
     let resp = await getAggregatePageMetricsApi(locationID, normalizeRange(range), sourceID)
